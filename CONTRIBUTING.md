@@ -37,7 +37,7 @@ Please add one project per pull request and briefly say why it belongs.
 
 ## Running the generator locally
 
-The generator is a Swift package in [`Tools/ReadmeGenerator`](Tools/ReadmeGenerator) that needs Swift 6.0 or later on macOS or Linux. From the repository root:
+The generator is a Swift package in [`Tools/ReadmeGenerator`](Tools/ReadmeGenerator) that needs Swift 6.4 or later on macOS or Linux. From the repository root:
 
 ```sh
 swift run --package-path Tools/ReadmeGenerator generate-readme

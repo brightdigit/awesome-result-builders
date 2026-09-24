@@ -30,7 +30,7 @@ jobs:
     name: Preview README
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    container: swift:6.1
+    container: swift:6.4
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
@@ -38,8 +38,8 @@ jobs:
       - uses: actions/cache@v6
         with:
           path: Tools/ReadmeGenerator/.build
-          key: swift-6.1-${{ runner.os }}-${{ hashFiles('Tools/ReadmeGenerator/Package.swift', 'Tools/ReadmeGenerator/Package.resolved') }}
-          restore-keys: swift-6.1-${{ runner.os }}-
+          key: swift-6.4-${{ runner.os }}-${{ hashFiles('Tools/ReadmeGenerator/Package.swift', 'Tools/ReadmeGenerator/Package.resolved') }}
+          restore-keys: swift-6.4-${{ runner.os }}-
 
       - name: Build generator
         run: swift build --package-path "$PACKAGE_PATH"
@@ -56,7 +56,7 @@ jobs:
     name: Update README
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
-    container: swift:6.1
+    container: swift:6.4
     timeout-minutes: 20
     permissions:
       contents: write
@@ -66,8 +66,8 @@ jobs:
       - uses: actions/cache@v6
         with:
           path: Tools/ReadmeGenerator/.build
-          key: swift-6.1-${{ runner.os }}-${{ hashFiles('Tools/ReadmeGenerator/Package.swift', 'Tools/ReadmeGenerator/Package.resolved') }}
-          restore-keys: swift-6.1-${{ runner.os }}-
+          key: swift-6.4-${{ runner.os }}-${{ hashFiles('Tools/ReadmeGenerator/Package.swift', 'Tools/ReadmeGenerator/Package.resolved') }}
+          restore-keys: swift-6.4-${{ runner.os }}-
 
       - name: Build generator
         run: swift build --package-path "$PACKAGE_PATH"
