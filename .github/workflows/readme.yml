@@ -1,0 +1,92 @@
+name: README
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    paths:
+      - "data/**"
+      - "Templates/**"
+      - "Tools/**"
+  schedule:
+    # Weekly, Mondays at 06:47 UTC, to refresh stars and last-updated dates.
+    - cron: "47 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # Pull requests cancel their own stale runs; runs that commit to a branch
+  # queue up per branch so they never push over each other.
+  group: readme-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  PACKAGE_PATH: Tools/ReadmeGenerator
+
+jobs:
+  preview:
+    name: Preview README
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    container: swift:6.1
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/cache@v6
+        with:
+          path: Tools/ReadmeGenerator/.build
+          key: swift-6.1-${{ runner.os }}-${{ hashFiles('Tools/ReadmeGenerator/Package.swift', 'Tools/ReadmeGenerator/Package.resolved') }}
+          restore-keys: swift-6.1-${{ runner.os }}-
+
+      - name: Build generator
+        run: swift build --package-path "$PACKAGE_PATH"
+
+      - name: Generate README
+        run: |
+          swift run --package-path "$PACKAGE_PATH" --skip-build generate-readme \
+            --output "$RUNNER_TEMP/README.md"
+
+      - name: Write preview to the step summary
+        run: cat "$RUNNER_TEMP/README.md" >> "$GITHUB_STEP_SUMMARY"
+
+  update:
+    name: Update README
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    container: swift:6.1
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/cache@v6
+        with:
+          path: Tools/ReadmeGenerator/.build
+          key: swift-6.1-${{ runner.os }}-${{ hashFiles('Tools/ReadmeGenerator/Package.swift', 'Tools/ReadmeGenerator/Package.resolved') }}
+          restore-keys: swift-6.1-${{ runner.os }}-
+
+      - name: Build generator
+        run: swift build --package-path "$PACKAGE_PATH"
+
+      - name: Generate README with GitHub metadata
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: swift run --package-path "$PACKAGE_PATH" --skip-build generate-readme --fetch-metadata
+
+      - name: Commit README if it changed
+        run: |
+          # The container runs as root but the workspace belongs to the runner user.
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          if git diff --quiet -- README.md; then
+            echo "README.md is already up to date."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "Regenerate README.md"
+          git push
