@@ -1,0 +1,81 @@
+# Source of truth for README.md.
+#
+# README.md is generated from this file by Tools/ReadmeGenerator.
+# Edit this file (never README.md) and see CONTRIBUTING.md for how to
+# regenerate the README locally.
+
+# Sections appear in the README in the order listed here.
+# Categories without any projects are omitted from the README.
+categories:
+  - id: code-generation
+    name: Code Generation
+    description: Build source code, such as Swift syntax trees, from declarative descriptions.
+  - id: package-management
+    name: Package Management
+    description: Describe Swift packages and their manifests declaratively.
+  - id: media-documents
+    name: Media & Documents
+    description: Create and work with presentations, video projects, and other documents.
+  - id: music-audio
+    name: Music & Audio
+    description: Compose music and sound with Swift.
+  - id: 3d-cad
+    name: 3D & CAD
+    description: Model 3D geometry and parts for printing and fabrication.
+
+# Each project needs a name, url, description, and a category id from above.
+# `platforms` is optional, e.g. [iOS, macOS, Linux].
+projects:
+  - name: SyntaxKit
+    url: https://github.com/brightdigit/SyntaxKit
+    description: Generate Swift code programmatically with declarative syntax.
+    category: code-generation
+
+  - name: PackageDSL
+    url: https://github.com/brightdigit/PackageDSL
+    description: Type-safe, modular DSL for managing your Package.swift file.
+    category: package-management
+
+  - name: FCPKit
+    url: https://github.com/brightdigit/FCPKit
+    description: Swift package for working with Final Cut Pro FCPXML documents.
+    category: media-documents
+
+  - name: KeynoteKit
+    url: https://github.com/brightdigit/KeynoteKit
+    description: Swift package for working with Apple Keynote documents.
+    category: media-documents
+
+  - name: DeckUI
+    url: https://github.com/joshdholtz/DeckUI
+    description: Write presentations in Swift with a SwiftUI-powered result builder DSL.
+    category: media-documents
+
+  - name: MusicPlaygournd
+    url: https://github.com/1amageek/MusicPlaygournd
+    description: Native macOS live music editor powered by the SwiftMusic DSL.
+    category: music-audio
+
+  - name: Cadova
+    url: https://github.com/tomasf/Cadova
+    description: Swift DSL for parametric 3D modeling.
+    category: 3d-cad
+
+# Learning resources, rendered as one subsection per group.
+resources:
+  - name: Official
+    items:
+      - title: "SE-0289: Result Builders"
+        url: https://github.com/swiftlang/swift-evolution/blob/main/proposals/0289-result-builders.md
+        note: The Swift Evolution proposal that introduced result builders in Swift 5.4.
+      - title: "SE-0348: buildPartialBlock for Result Builders"
+        url: https://github.com/swiftlang/swift-evolution/blob/main/proposals/0348-buildpartialblock.md
+        note: Lets builders combine components pairwise, available since Swift 5.7.
+      - title: "The Swift Programming Language: Result Builders"
+        url: https://docs.swift.org/swift-book/documentation/the-swift-programming-language/advancedoperators/#Result-Builders
+        note: The language guide's walkthrough of the builder methods and how the compiler applies them.
+  - name: Talks
+    items:
+      - title: Write a DSL in Swift using result builders
+        url: https://developer.apple.com/videos/play/wwdc2021/10253/
+        note: WWDC21 session on designing and building a DSL with a result builder.
