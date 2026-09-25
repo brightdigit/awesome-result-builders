@@ -98,6 +98,10 @@ jobs:
         id: swift
         run: echo "version=$(swift --version 2>/dev/null | head -n1 | tr -cd '[:alnum:].')" >> "$GITHUB_OUTPUT"
 
+      # mise-action downloads mise with curl, which the swift image doesn't ship.
+      - name: Install curl
+        run: apt-get update && apt-get install -y --no-install-recommends curl ca-certificates
+
       # swift-format is built from source by mise's spm backend, which takes
       # several minutes, so the installed tools are cached per toolchain and
       # .mise.toml. They are saved as soon as they're installed, so a run that
