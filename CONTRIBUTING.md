@@ -2,6 +2,12 @@
 
 Thanks for helping grow the list! Please read this before opening a pull request.
 
+## Suggesting a project
+
+The easiest way to add a project is to [open an "Add a project" issue](https://github.com/leogdion/awesome-result-builders/issues/new?template=add-project.yml). When you submit it, a pull request that adds the project to `data/projects.yml` is opened automatically for a maintainer to review. If the details need fixing, a comment on the issue says what; edit the issue and the pull request is updated.
+
+To edit an existing entry, add a learning resource, or add a category, change `data/projects.yml` directly as described below. If you add a category, also add its name to the dropdown in [`.github/ISSUE_TEMPLATE/add-project.yml`](.github/ISSUE_TEMPLATE/add-project.yml).
+
 ## Adding or editing an entry
 
 `README.md` is generated. **Don't edit it by hand**; any changes to it are overwritten the next time it's generated. Instead:
