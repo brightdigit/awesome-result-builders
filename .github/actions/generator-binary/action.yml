@@ -1,16 +1,16 @@
 name: Generator binary
 description: >-
   Put a release build of generate-readme at .bin/generate-readme. The binary
-  is cached per Swift toolchain and generator sources, so it is compiled once
+  is cached per OS, Swift toolchain, and generator sources, so it is compiled once
   and every data/ or Templates/ change reuses it.
 
 runs:
   using: composite
   steps:
-    - name: Capture Swift version
+    - name: Capture OS and Swift version
       id: swift
       shell: bash
-      run: echo "version=$(swift --version 2>/dev/null | head -n1 | tr -cd '[:alnum:].')" >> "$GITHUB_OUTPUT"
+      run: echo "version=$(. /etc/os-release && echo "$ID$VERSION_ID")-$(swift --version 2>/dev/null | head -n1 | tr -cd '[:alnum:].')" >> "$GITHUB_OUTPUT"
 
     - name: Cache generator binary
       id: binary

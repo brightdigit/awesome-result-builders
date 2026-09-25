@@ -88,15 +88,17 @@ jobs:
     needs: [detect-changes, build]
     if: ${{ needs.detect-changes.outputs.code-changed == 'true' }}
     runs-on: ubuntu-latest
-    container: swift:6.4
+    # SwiftLint's prebuilt Linux binary links libxml2.so.2, which Ubuntu 26.04
+    # (the default swift:6.4 image) no longer ships; the Ubuntu 24.04 image does.
+    container: swift:6.4-noble
     timeout-minutes: 30
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
 
-      - name: Capture Swift version
+      - name: Capture OS and Swift version
         id: swift
-        run: echo "version=$(swift --version 2>/dev/null | head -n1 | tr -cd '[:alnum:].')" >> "$GITHUB_OUTPUT"
+        run: echo "version=$(. /etc/os-release && echo "$ID$VERSION_ID")-$(swift --version 2>/dev/null | head -n1 | tr -cd '[:alnum:].')" >> "$GITHUB_OUTPUT"
 
       # mise-action downloads mise with curl, which the swift image doesn't ship.
       - name: Install curl
