@@ -1,6 +1,15 @@
 // swift-tools-version: 6.4
 import PackageDescription
 
+let swiftSettings: [SwiftSetting] = [
+  // SE-0409: Access-level modifiers on import declarations
+  .enableUpcomingFeature("InternalImportsByDefault"),
+  // SE-0461: Run nonisolated async functions on the caller's actor by default
+  .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
+  // SE-0458: Opt-in strict memory safety checking
+  .strictMemorySafety(),
+]
+
 let package = Package(
   name: "ReadmeGenerator",
   platforms: [.macOS(.v13)],
@@ -17,14 +26,16 @@ let package = Package(
       dependencies: [
         .product(name: "Yams", package: "Yams"),
         .product(name: "ArgumentParser", package: "swift-argument-parser"),
-      ]
+      ],
+      swiftSettings: swiftSettings
     ),
     .testTarget(
       name: "ReadmeGeneratorTests",
       dependencies: [
         "ReadmeGenerator",
         .product(name: "Yams", package: "Yams"),
-      ]
+      ],
+      swiftSettings: swiftSettings
     ),
   ]
 )
