@@ -1,0 +1,90 @@
+# Contributing
+
+Thanks for helping grow the list! Please read this before opening a pull request.
+
+## Suggesting a project
+
+The easiest way to add a project is to [open an "Add a project" issue](https://github.com/leogdion/awesome-result-builders/issues/new?template=add-project.yml). When you submit it, a pull request that adds the project to `data/projects.yml`, along with the regenerated `README.md`, is opened automatically for a maintainer to review. If the details need fixing, a comment on the issue says what; edit the issue and the pull request is updated.
+
+To edit an existing entry, add a learning resource, or add a category, change `data/projects.yml` directly as described below. If you add a category, also add its name to the dropdown in [`.github/ISSUE_TEMPLATE/add-project.yml`](.github/ISSUE_TEMPLATE/add-project.yml).
+
+## Adding or editing an entry
+
+`README.md` is generated. **Don't edit it by hand**; any changes to it are overwritten the next time it's generated. Instead:
+
+1. Add or update the project in [`data/projects.yml`](data/projects.yml):
+
+   ```yaml
+   - name: MyBuilderKit
+     url: https://github.com/you/MyBuilderKit
+     description: One sentence about what the DSL builds.
+     category: code-generation
+     platforms: [iOS, macOS, Linux] # optional
+   ```
+
+   - `category` must be the `id` of one of the `categories` at the top of the file. If none fits, add a new category in the same pull request; categories appear in the README in the order they're listed.
+   - Keep the description to one short sentence. A trailing period is added if you leave it off.
+   - Each URL may appear only once in the file.
+   - Projects are sorted by name within their category, so you can add yours anywhere in the list.
+
+2. Learning resources (proposals, articles, talks) go under `resources`, in the group that fits best.
+
+3. Open a pull request. The **README** workflow builds the generator and shows the rendered README in the run's summary so you can check the result. You don't need to commit a regenerated `README.md`; it's regenerated automatically after your change is merged.
+
+## Inclusion criteria
+
+A project is a good fit when it is:
+
+- **Open source**, with its source publicly available.
+- **Built around a result builder.** The result builder DSL should be a primary way to use the project, not an incidental helper or a single internal use.
+- **Maintained or notable.** It's actively maintained, or it's influential or instructive enough to be worth knowing about even if it's no longer updated. Archived projects are marked as such in the README.
+
+Please add one project per pull request and briefly say why it belongs.
+
+## Running the generator locally
+
+The generator is a Swift package in [`Tools/ReadmeGenerator`](Tools/ReadmeGenerator) that needs Swift 6.4 or later on macOS 15 or later, or on Linux. From the repository root:
+
+```sh
+swift run --package-path Tools/ReadmeGenerator generate-readme
+```
+
+That validates `data/projects.yml` and writes `README.md`. Useful options:
+
+| Option | Default | Purpose |
+| --- | --- | --- |
+| `--data <path>` | `data/projects.yml` | Project data to read. |
+| `--templates <path>` | `Templates` | Directory containing `header.md` and `footer.md`. |
+| `--output <path>` | `README.md` | Where to write the Markdown. |
+| `--fetch-metadata` | off | Add GitHub stars, last update, and archived status. Needs `GITHUB_TOKEN`. |
+
+To preview without touching `README.md`, write somewhere else:
+
+```sh
+swift run --package-path Tools/ReadmeGenerator generate-readme --output /tmp/README.md
+```
+
+To include GitHub metadata, provide a token (a fine-grained token with public read-only access is enough; `gh auth token` works too):
+
+```sh
+GITHUB_TOKEN=$(gh auth token) swift run --package-path Tools/ReadmeGenerator generate-readme --fetch-metadata
+```
+
+Repositories that can't be looked up, such as private ones, are listed without metadata.
+
+If the generator reports a problem such as an unknown category or a duplicate URL, fix it in `data/projects.yml` and run it again.
+
+## Changing the generator
+
+Changes to the generator's Swift code are built, tested, and linted in CI. Linting uses swift-format and SwiftLint, the same setup used across BrightDigit's Swift packages, with the tool versions pinned in [`Tools/ReadmeGenerator/.mise.toml`](Tools/ReadmeGenerator/.mise.toml). With [mise](https://mise.jdx.dev) installed, run these before opening a pull request:
+
+```sh
+swift test --package-path Tools/ReadmeGenerator
+Tools/ReadmeGenerator/Scripts/lint.sh
+```
+
+Run locally, the script also formats the code, applies SwiftLint's fixes and adds the standard file headers. Set `LINT_MODE=STRICT` to match CI.
+
+## License
+
+The list is dedicated to the public domain under [CC0 1.0](LICENSE), so by contributing an entry you agree to release it under the same terms. The generator in `Tools/ReadmeGenerator` is [MIT licensed](Tools/ReadmeGenerator/LICENSE).

@@ -1,0 +1,38 @@
+name: Generator binary
+description: >-
+  Put a release build of generate-readme at .bin/generate-readme. The binary
+  is cached per OS, Swift toolchain, and generator sources, so it is compiled once
+  and every data/ or Templates/ change reuses it.
+
+runs:
+  using: composite
+  steps:
+    - name: Capture OS and Swift version
+      id: swift
+      shell: bash
+      run: echo "version=$(. /etc/os-release && echo "$ID$VERSION_ID")-$(swift --version 2>/dev/null | head -n1 | tr -cd '[:alnum:].')" >> "$GITHUB_OUTPUT"
+
+    - name: Cache generator binary
+      id: binary
+      uses: actions/cache@v6
+      with:
+        path: .bin/generate-readme
+        key: generate-readme-${{ runner.os }}-${{ steps.swift.outputs.version }}-${{ hashFiles('Tools/ReadmeGenerator/Package.swift', 'Tools/ReadmeGenerator/Package.resolved', 'Tools/ReadmeGenerator/Sources/**/*.swift') }}
+
+    # Only needed when the binary itself has to be rebuilt.
+    - name: Cache SwiftPM release build
+      if: steps.binary.outputs.cache-hit != 'true'
+      uses: actions/cache@v6
+      with:
+        path: Tools/ReadmeGenerator/.build
+        key: spm-release-${{ runner.os }}-${{ steps.swift.outputs.version }}-${{ hashFiles('Tools/ReadmeGenerator/Package.resolved') }}
+        restore-keys: spm-release-${{ runner.os }}-${{ steps.swift.outputs.version }}-
+
+    - name: Build generator (release)
+      if: steps.binary.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        swift build --package-path Tools/ReadmeGenerator -c release --product generate-readme
+        BIN_PATH=$(swift build --package-path Tools/ReadmeGenerator -c release --show-bin-path)
+        mkdir -p .bin
+        cp "$BIN_PATH/generate-readme" .bin/generate-readme

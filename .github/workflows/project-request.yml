@@ -1,0 +1,73 @@
+name: Project Request
+
+# Turns an "Add a project" issue into a pull request that adds the project to
+# data/projects.yml and includes the regenerated README.md, so the diff shows
+# exactly what will be published. Nothing is merged automatically: a
+# maintainer reviews and merges the pull request.
+on:
+  issues:
+    types: [opened, edited, labeled, reopened]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: project-request-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  pull-request:
+    name: Open Pull Request
+    if: >-
+      github.event.issue.state == 'open' &&
+      contains(github.event.issue.labels.*.name, 'project-request') &&
+      (github.event.action != 'labeled' || github.event.label.name == 'project-request')
+    runs-on: ubuntu-latest
+    container: swift:6.4
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Restore or build generator
+        uses: ./.github/actions/generator-binary
+
+      - name: Add project from the issue
+        id: project
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const { prepare } = require('./.github/scripts/project-request.js')
+            await prepare({ core, context })
+
+      # Validates the updated data and regenerates README.md with the same
+      # GitHub metadata the README workflow adds, so the pull request's README
+      # diff is just the new project (plus any refreshed stars and dates).
+      - name: Validate and regenerate README
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if ! ./.bin/generate-readme --fetch-metadata 2> "$RUNNER_TEMP/generate.log"; then
+            cp "$RUNNER_TEMP/generate.log" "$RUNNER_TEMP/project-request-problems.txt"
+            exit 1
+          fi
+          cat "$RUNNER_TEMP/generate.log"
+
+      - name: Open or update pull request
+        uses: actions/github-script@v9
+        env:
+          PROJECT_NAME: ${{ steps.project.outputs.name }}
+          PROJECT_ENTRY: ${{ steps.project.outputs.entry }}
+        with:
+          script: |
+            const { openPullRequest } = require('./.github/scripts/project-request.js')
+            await openPullRequest({ github, context })
+
+      - name: Explain problems on the issue
+        if: failure()
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const { reportProblems } = require('./.github/scripts/project-request.js')
+            await reportProblems({ github, context })

@@ -1,0 +1,76 @@
+name: Add a project
+description: Suggest a Swift library or tool built around a result builder DSL.
+title: "Add "
+labels: ["project-request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the suggestion! Please check the [inclusion criteria](https://github.com/leogdion/awesome-result-builders/blob/main/CONTRIBUTING.md#inclusion-criteria) first.
+
+        When you submit this issue, a pull request adding the project to `data/projects.yml` and the regenerated `README.md` is opened automatically for a maintainer to review. If something needs fixing, a comment here will say what; edit the issue and the pull request is updated.
+
+  - type: input
+    id: name
+    attributes:
+      label: Project name
+      placeholder: SyntaxKit
+    validations:
+      required: true
+
+  - type: input
+    id: url
+    attributes:
+      label: Repository URL
+      placeholder: https://github.com/brightdigit/SyntaxKit
+    validations:
+      required: true
+
+  - type: input
+    id: description
+    attributes:
+      label: Description
+      description: One short sentence about what the DSL builds.
+      placeholder: Generate Swift code programmatically with declarative syntax.
+    validations:
+      required: true
+
+  # Keep these in sync with the category names in data/projects.yml.
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - Code Generation
+        - Package Management
+        - Media & Documents
+        - Music & Audio
+        - 3D & CAD
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: platforms
+    attributes:
+      label: Platforms
+      description: Optional. Leave all unchecked if you're not sure.
+      options:
+        - label: iOS
+        - label: macOS
+        - label: tvOS
+        - label: watchOS
+        - label: visionOS
+        - label: Linux
+        - label: Windows
+
+  - type: checkboxes
+    id: criteria
+    attributes:
+      label: Inclusion criteria
+      options:
+        - label: The project is open source.
+          required: true
+        - label: A result builder DSL is a primary way to use it.
+          required: true
+        - label: It is actively maintained, or notable enough to list anyway.
+          required: true
