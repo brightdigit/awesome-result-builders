@@ -32,7 +32,7 @@ import Configuration
 import Foundation
 
 /// Generates `README.md` from the project data and Markdown templates.
-public struct GenerateReadmeCommand: Command {
+public struct GenerateReadmeCommand: Command, Codable, Equatable {
   public static let commandName = "generate-readme"
   public static let abstract =
     "Generate README.md from the project data and Markdown templates."
