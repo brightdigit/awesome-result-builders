@@ -84,3 +84,7 @@ Tools/ReadmeGenerator/Scripts/lint.sh
 ```
 
 Run locally, the script also formats the code, applies SwiftLint's fixes and adds the standard file headers. Set `LINT_MODE=STRICT` to match CI.
+
+## License
+
+The list is dedicated to the public domain under [CC0 1.0](LICENSE), so by contributing an entry you agree to release it under the same terms. The generator in `Tools/ReadmeGenerator` is [MIT licensed](Tools/ReadmeGenerator/LICENSE).
