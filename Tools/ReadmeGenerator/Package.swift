@@ -18,6 +18,13 @@ let package = Package(
         .product(name: "Yams", package: "Yams"),
         .product(name: "ArgumentParser", package: "swift-argument-parser"),
       ]
-    )
+    ),
+    .testTarget(
+      name: "ReadmeGeneratorTests",
+      dependencies: [
+        "ReadmeGenerator",
+        .product(name: "Yams", package: "Yams"),
+      ]
+    ),
   ]
 )
