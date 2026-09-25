@@ -1,5 +1,5 @@
 //
-//  AnchorGenerator.swift
+//  String+Markdown.swift
 //  ReadmeGenerator
 //
 //  Created by Leo Dion.
@@ -27,18 +27,37 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-/// Produces heading anchors the way GitHub does when it renders Markdown.
-///
-/// Repeated headings get `-1`, `-2`, … suffixes in document order, which is why
-/// every heading on the page must be passed through the same generator.
-internal struct AnchorGenerator: Codable, Equatable, Sendable {
-  private var occurrences: [String: Int] = [:]
+import Foundation
 
-  /// Returns the anchor for the next heading with this text.
-  internal mutating func anchor(for heading: String) -> String {
-    let slug = heading.gitHubSlug
-    let previousOccurrences = occurrences[slug, default: 0]
-    occurrences[slug] = previousOccurrences + 1
-    return previousOccurrences > 0 ? "\(slug)-\(previousOccurrences)" : slug
+extension String {
+  /// The anchor GitHub gives a heading with this text.
+  ///
+  /// GitHub lowercases the heading, drops punctuation and symbols, and turns
+  /// spaces into hyphens, so "Media & Documents" becomes `media--documents`.
+  internal var gitHubSlug: String {
+    var slug = ""
+    for character in lowercased() {
+      if character == " " {
+        slug.append("-")
+      } else if character.isLetter || character.isNumber || "-_".contains(character) {
+        slug.append(character)
+      }
+    }
+    return slug
+  }
+
+  /// The string trimmed, or `nil` if nothing is left.
+  internal var trimmedNonEmpty: String? {
+    let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
+    return trimmed.isEmpty ? nil : trimmed
+  }
+
+  /// The string trimmed and ending with sentence punctuation.
+  internal var sentence: String {
+    let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
+    guard let last = trimmed.last, !".!?".contains(last) else {
+      return trimmed
+    }
+    return trimmed + "."
   }
 }

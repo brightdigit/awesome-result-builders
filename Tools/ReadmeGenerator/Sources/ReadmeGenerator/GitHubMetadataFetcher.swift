@@ -27,60 +27,78 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
+import AsyncHTTPClient
 import Foundation
-
-#if canImport(FoundationNetworking)
-  import FoundationNetworking
-#endif
+import NIOCore
+import NIOFoundationCompat
 
 /// Looks up ``RepositoryMetadata`` from the GitHub REST API.
 internal struct GitHubMetadataFetcher: Sendable {
+  /// The largest response body accepted, far above a repository's JSON.
+  private let maximumBodySize = 1 << 20
+  private let userAgent = "awesome-result-builders-generate-readme"
+
   internal let token: String
+  /// The API root: `https://api.github.com`, or another server for testing.
+  internal let apiURL: String
+  internal let client: HTTPClient
+
+  internal init(token: String, apiURL: String, client: HTTPClient = .shared) {
+    self.token = token
+    self.apiURL = apiURL
+    self.client = client
+  }
 
   /// Fetches metadata for every GitHub URL concurrently, keyed by the URL as given.
   ///
   /// URLs that aren't GitHub repositories, and requests that fail for any
   /// reason (most often a private repository the token can't see), are left out.
   internal func metadata(forURLs urls: [String]) async -> [String: RepositoryMetadata] {
-    await withTaskGroup(of: (String, RepositoryMetadata?).self) { group in
+    await withTaskGroup(of: RepositoryLookup.self) { group in
       for url in Set(urls) {
         guard let repository = GitHubRepository(url: url) else {
           continue
         }
         group.addTask {
-          (url, try? await metadata(for: repository))
+          RepositoryLookup(url: url, metadata: try? await metadata(for: repository))
         }
       }
       var results: [String: RepositoryMetadata] = [:]
-      for await (url, metadata) in group {
-        results[url] = metadata
+      for await lookup in group {
+        results[lookup.url] = lookup.metadata
       }
       return results
     }
   }
 
-  internal func metadata(for repository: GitHubRepository) async throws
-    -> RepositoryMetadata
-  {
-    let path = "repos/\(repository.owner)/\(repository.name)"
-    guard let url = URL(string: "https://api.github.com/\(path)") else {
-      throw URLError(.badURL)
-    }
-    var request = URLRequest(url: url, timeoutInterval: 30)
-    request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-    request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
-    request.setValue("2022-11-28", forHTTPHeaderField: "X-GitHub-Api-Version")
-    request.setValue(
-      "awesome-result-builders-generate-readme",
-      forHTTPHeaderField: "User-Agent"
-    )
+  internal func metadata(
+    for repository: GitHubRepository
+  ) async throws(GitHubMetadataError) -> RepositoryMetadata {
+    var request = HTTPClientRequest(url: "\(apiURL)/\(repository.apiPath)")
+    request.headers.add(name: "Authorization", value: "Bearer \(token)")
+    request.headers.add(name: "Accept", value: "application/vnd.github+json")
+    request.headers.add(name: "X-GitHub-Api-Version", value: "2022-11-28")
+    request.headers.add(name: "User-Agent", value: userAgent)
 
-    let (data, statusCode) = try await URLSession.shared.responseData(for: request)
-    guard statusCode == 200 else {
-      throw URLError(.badServerResponse)
+    let body: ByteBuffer
+    do {
+      let response = try await client.execute(request, timeout: .seconds(30))
+      guard response.status == .ok else {
+        throw GitHubMetadataError.unexpectedStatus(response.status.code)
+      }
+      body = try await response.body.collect(upTo: maximumBodySize)
+    } catch let error as GitHubMetadataError {
+      throw error
+    } catch {
+      throw .requestFailed("\(error)")
     }
+
     let decoder = JSONDecoder()
     decoder.dateDecodingStrategy = .iso8601
-    return try decoder.decode(RepositoryMetadata.self, from: data)
+    do {
+      return try decoder.decode(RepositoryMetadata.self, from: body)
+    } catch {
+      throw .invalidResponse("\(error)")
+    }
   }
 }

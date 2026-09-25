@@ -28,7 +28,7 @@
 //
 
 /// A proposal, article, or talk listed under a ``ResourceGroup``.
-internal struct Resource: Decodable, Sendable {
+internal struct Resource: Codable, Equatable, Sendable {
   internal let title: String
   internal let url: String
   internal let note: String?

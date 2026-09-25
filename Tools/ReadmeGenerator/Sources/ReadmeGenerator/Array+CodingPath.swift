@@ -1,5 +1,5 @@
 //
-//  GeneratorError.swift
+//  Array+CodingPath.swift
 //  ReadmeGenerator
 //
 //  Created by Leo Dion.
@@ -27,15 +27,18 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-import Foundation
-
-/// An error whose description is shown to the user as-is.
-internal struct GeneratorError: Error, CustomStringConvertible, LocalizedError {
-  internal let description: String
-
-  internal var errorDescription: String? { description }
-
-  internal init(_ description: String) {
-    self.description = description
+extension Array where Element == any CodingKey {
+  /// The coding path in `projects[3].url` form.
+  internal var readablePath: String {
+    guard !isEmpty else {
+      return "the top level"
+    }
+    return reduce(into: "") { path, key in
+      if let index = key.intValue {
+        path += "[\(index)]"
+      } else {
+        path += path.isEmpty ? key.stringValue : ".\(key.stringValue)"
+      }
+    }
   }
 }

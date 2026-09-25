@@ -1,5 +1,5 @@
 //
-//  AnchorGenerator.swift
+//  ConfigReader+ConfigValueReading.swift
 //  ReadmeGenerator
 //
 //  Created by Leo Dion.
@@ -27,18 +27,13 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-/// Produces heading anchors the way GitHub does when it renders Markdown.
-///
-/// Repeated headings get `-1`, `-2`, … suffixes in document order, which is why
-/// every heading on the page must be passed through the same generator.
-internal struct AnchorGenerator: Codable, Equatable, Sendable {
-  private var occurrences: [String: Int] = [:]
+public import ConfigKeyKit
+public import Configuration
 
-  /// Returns the anchor for the next heading with this text.
-  internal mutating func anchor(for heading: String) -> String {
-    let slug = heading.gitHubSlug
-    let previousOccurrences = occurrences[slug, default: 0]
-    occurrences[slug] = previousOccurrences + 1
-    return previousOccurrences > 0 ? "\(slug)-\(previousOccurrences)" : slug
+/// Lets ConfigKeyKit keys resolve through swift-configuration's `ConfigReader`,
+/// checking the command line first and then the environment.
+extension ConfigReader: @retroactive ConfigValueReading {
+  public func makeConfigKey(_ string: String) -> Configuration.ConfigKey {
+    Configuration.ConfigKey(string)
   }
 }

@@ -1,5 +1,5 @@
 //
-//  AnchorGenerator.swift
+//  DecodingError+ReadableDescription.swift
 //  ReadmeGenerator
 //
 //  Created by Leo Dion.
@@ -27,18 +27,32 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-/// Produces heading anchors the way GitHub does when it renders Markdown.
-///
-/// Repeated headings get `-1`, `-2`, … suffixes in document order, which is why
-/// every heading on the page must be passed through the same generator.
-internal struct AnchorGenerator: Codable, Equatable, Sendable {
-  private var occurrences: [String: Int] = [:]
+extension DecodingError {
+  /// A short message pointing at the offending entry.
+  ///
+  /// For example: `missing required key "url" at projects[3]`.
+  internal var readableDescription: String {
+    switch self {
+    case let .keyNotFound(key, context):
+      let path = context.codingPath.readablePath
+      return "missing required key \"\(key.stringValue)\" at \(path)"
+    case let .dataCorrupted(context),
+      let .typeMismatch(_, context),
+      let .valueNotFound(_, context):
+      return context.readableDescription
+    @unknown default:
+      return "\(self)"
+    }
+  }
+}
 
-  /// Returns the anchor for the next heading with this text.
-  internal mutating func anchor(for heading: String) -> String {
-    let slug = heading.gitHubSlug
-    let previousOccurrences = occurrences[slug, default: 0]
-    occurrences[slug] = previousOccurrences + 1
-    return previousOccurrences > 0 ? "\(slug)-\(previousOccurrences)" : slug
+extension DecodingError.Context {
+  /// The context's message and where it happened.
+  internal var readableDescription: String {
+    // YAML syntax errors carry the line and column in the underlying error.
+    if let underlyingError {
+      return "\(underlyingError)"
+    }
+    return "\(debugDescription) (at \(codingPath.readablePath))"
   }
 }

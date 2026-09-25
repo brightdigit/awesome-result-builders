@@ -1,5 +1,5 @@
 //
-//  AnchorGenerator.swift
+//  NormalizedURL.swift
 //  ReadmeGenerator
 //
 //  Created by Leo Dion.
@@ -27,18 +27,27 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-/// Produces heading anchors the way GitHub does when it renders Markdown.
-///
-/// Repeated headings get `-1`, `-2`, … suffixes in document order, which is why
-/// every heading on the page must be passed through the same generator.
-internal struct AnchorGenerator: Codable, Equatable, Sendable {
-  private var occurrences: [String: Int] = [:]
+import Foundation
 
-  /// Returns the anchor for the next heading with this text.
-  internal mutating func anchor(for heading: String) -> String {
-    let slug = heading.gitHubSlug
-    let previousOccurrences = occurrences[slug, default: 0]
-    occurrences[slug] = previousOccurrences + 1
-    return previousOccurrences > 0 ? "\(slug)-\(previousOccurrences)" : slug
+/// A URL reduced to a comparable form.
+///
+/// Trivially different spellings (scheme, `www.`, letter case, a trailing
+/// slash, `.git`) produce the same value.
+internal struct NormalizedURL: Codable, Hashable, Sendable {
+  internal let value: String
+
+  /// Returns `nil` for anything that isn't an absolute http(s) URL.
+  internal init?(_ string: String) {
+    guard
+      let components = URLComponents(string: string.trimmingCharacters(in: .whitespaces)),
+      let scheme = components.scheme?.lowercased(),
+      ["http", "https"].contains(scheme),
+      let host = components.host?.lowercased(),
+      !host.isEmpty
+    else {
+      return nil
+    }
+    let bareHost = host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
+    value = bareHost + components.normalizedPath + components.normalizedSuffix
   }
 }

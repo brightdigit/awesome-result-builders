@@ -28,7 +28,7 @@
 //
 
 /// A README section that projects are grouped under.
-internal struct Category: Decodable, Sendable {
+internal struct Category: Codable, Equatable, Sendable {
   internal let id: String
   internal let name: String
   internal let description: String?

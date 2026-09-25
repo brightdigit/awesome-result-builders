@@ -1,5 +1,5 @@
 //
-//  URLSession+ResponseData.swift
+//  URLComponents+Normalized.swift
 //  ReadmeGenerator
 //
 //  Created by Leo Dion.
@@ -29,29 +29,28 @@
 
 import Foundation
 
-#if canImport(FoundationNetworking)
-  import FoundationNetworking
-#endif
-
-extension URLSession {
-  /// Performs `request` and returns the body and HTTP status code.
-  ///
-  /// Wraps the completion-handler API in a continuation because the async
-  /// `URLSession` methods aren't available in every Linux Foundation release.
-  internal func responseData(
-    for request: URLRequest
-  ) async throws -> (data: Data, statusCode: Int) {
-    try await withCheckedThrowingContinuation { continuation in
-      let task = dataTask(with: request) { data, response, error in
-        if let error {
-          continuation.resume(throwing: error)
-        } else if let data, let response = response as? HTTPURLResponse {
-          continuation.resume(returning: (data, response.statusCode))
-        } else {
-          continuation.resume(throwing: URLError(.badServerResponse))
-        }
-      }
-      task.resume()
+extension URLComponents {
+  /// The lowercased path without trailing slashes or a `.git` suffix.
+  internal var normalizedPath: String {
+    var path = path.lowercased()
+    while path.hasSuffix("/") {
+      path.removeLast()
     }
+    if path.hasSuffix(".git") {
+      path.removeLast(4)
+    }
+    return path
+  }
+
+  /// The lowercased `?query` and `#fragment`, when present.
+  internal var normalizedSuffix: String {
+    var suffix = ""
+    if let query, !query.isEmpty {
+      suffix += "?" + query
+    }
+    if let fragment, !fragment.isEmpty {
+      suffix += "#" + fragment
+    }
+    return suffix.lowercased()
   }
 }

@@ -30,9 +30,14 @@
 import Foundation
 
 /// The owner and name of a repository linked as `https://github.com/<owner>/<name>`.
-internal struct GitHubRepository: Hashable, Sendable {
+internal struct GitHubRepository: Codable, Hashable, Sendable {
   internal let owner: String
   internal let name: String
+
+  /// The repository's path in the GitHub REST API.
+  internal var apiPath: String {
+    "repos/\(owner)/\(name)"
+  }
 
   /// Returns `nil` unless `url` points at the root of a GitHub repository.
   internal init?(url: String) {

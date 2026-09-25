@@ -4,9 +4,9 @@ import Testing
 
 internal struct AnchorGeneratorTests {
   @Test internal func slugMatchesGitHub() {
-    #expect(AnchorGenerator.slug(for: "Media & Documents") == "media--documents")
-    #expect(AnchorGenerator.slug(for: "3D & CAD") == "3d--cad")
-    #expect(AnchorGenerator.slug(for: "Learning Resources") == "learning-resources")
+    #expect("Media & Documents".gitHubSlug == "media--documents")
+    #expect("3D & CAD".gitHubSlug == "3d--cad")
+    #expect("Learning Resources".gitHubSlug == "learning-resources")
   }
 
   @Test internal func repeatedHeadingsGetSuffixes() {

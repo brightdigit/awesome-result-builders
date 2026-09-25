@@ -30,7 +30,7 @@
 import Foundation
 
 /// Repository details shown next to a project when `--fetch-metadata` is used.
-internal struct RepositoryMetadata: Decodable, Sendable {
+internal struct RepositoryMetadata: Codable, Equatable, Sendable {
   private enum CodingKeys: String, CodingKey {
     case stars = "stargazers_count"
     case pushedAt = "pushed_at"
@@ -40,4 +40,13 @@ internal struct RepositoryMetadata: Decodable, Sendable {
   internal let stars: Int
   internal let pushedAt: Date?
   internal let isArchived: Bool
+
+  /// `★ N · updated MMM yyyy`, or just the stars when the push date is unknown.
+  internal var summary: String {
+    var parts = ["★ \(stars)"]
+    if let pushedAt {
+      parts.append("updated \(pushedAt.monthAndYear)")
+    }
+    return parts.joined(separator: " · ")
+  }
 }

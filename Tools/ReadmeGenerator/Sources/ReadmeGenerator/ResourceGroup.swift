@@ -28,7 +28,7 @@
 //
 
 /// A subsection of the README's learning resources, such as "Talks".
-internal struct ResourceGroup: Decodable, Sendable {
+internal struct ResourceGroup: Codable, Equatable, Sendable {
   internal let name: String
   internal let items: [Resource]
 }

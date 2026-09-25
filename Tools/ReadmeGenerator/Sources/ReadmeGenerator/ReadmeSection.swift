@@ -27,15 +27,25 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-/// A generated README section: a heading followed by blocks of Markdown.
-internal struct ReadmeSection {
+import Markdown
+
+/// A generated README section: a heading, an optional introduction, and its entries.
+internal struct ReadmeSection: Codable, Equatable, Sendable {
   internal let heading: String
   /// The heading level, such as `2` for `##`.
   internal let level: Int
-  internal let blocks: [String]
+  internal let introduction: String?
+  internal let entries: [ReadmeEntry]
 
-  internal var markdown: String {
-    let headingLine = String(repeating: "#", count: level) + " " + heading
-    return ([headingLine] + blocks).joined(separator: "\n\n")
+  /// The section as Markdown blocks.
+  internal var blocks: [any BlockMarkup] {
+    var blocks: [any BlockMarkup] = [Heading(level: level, Text(heading))]
+    if let introduction {
+      blocks.append(Paragraph(Text(introduction)))
+    }
+    if !entries.isEmpty {
+      blocks.append(UnorderedList(entries.map(\.listItem)))
+    }
+    return blocks
   }
 }

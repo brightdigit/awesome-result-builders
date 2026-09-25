@@ -1,5 +1,5 @@
 //
-//  AnchorGenerator.swift
+//  GitHubMetadataError.swift
 //  ReadmeGenerator
 //
 //  Created by Leo Dion.
@@ -27,18 +27,12 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-/// Produces heading anchors the way GitHub does when it renders Markdown.
-///
-/// Repeated headings get `-1`, `-2`, … suffixes in document order, which is why
-/// every heading on the page must be passed through the same generator.
-internal struct AnchorGenerator: Codable, Equatable, Sendable {
-  private var occurrences: [String: Int] = [:]
-
-  /// Returns the anchor for the next heading with this text.
-  internal mutating func anchor(for heading: String) -> String {
-    let slug = heading.gitHubSlug
-    let previousOccurrences = occurrences[slug, default: 0]
-    occurrences[slug] = previousOccurrences + 1
-    return previousOccurrences > 0 ? "\(slug)-\(previousOccurrences)" : slug
-  }
+/// Why a repository's metadata couldn't be fetched.
+internal enum GitHubMetadataError: Error, Equatable, Sendable {
+  /// The request couldn't be sent or its body couldn't be read.
+  case requestFailed(String)
+  /// GitHub answered with something other than `200 OK`.
+  case unexpectedStatus(UInt)
+  /// The response body wasn't the expected repository JSON.
+  case invalidResponse(String)
 }

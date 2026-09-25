@@ -1,5 +1,5 @@
 //
-//  Catalog.swift
+//  MarkdownTemplate.swift
 //  ReadmeGenerator
 //
 //  Created by Leo Dion.
@@ -28,42 +28,32 @@
 //
 
 import Foundation
-import Yams
+import Markdown
 
-/// The contents of `data/projects.yml`.
-internal struct Catalog: Codable, Equatable, Sendable {
-  /// Categories in the order their sections appear in the README.
-  internal let categories: [Category]
-  internal let projects: [Project]
-  internal let resources: [ResourceGroup]
+/// A Markdown file inserted into the README as-is, such as `Templates/header.md`.
+internal struct MarkdownTemplate: Codable, Equatable, Sendable {
+  /// The template's Markdown without surrounding whitespace.
+  internal let markdown: String
 
-  internal init(categories: [Category], projects: [Project], resources: [ResourceGroup]) {
-    self.categories = categories
-    self.projects = projects
-    self.resources = resources
+  /// The template's headings in document order; code blocks are skipped.
+  internal var headings: [TemplateHeading] {
+    var collector = HeadingCollector()
+    collector.visit(Document(parsing: markdown))
+    return collector.headings
   }
 
-  /// Decodes a catalog from YAML; `path` names the source in error messages.
-  internal init(yaml: String, path: String = "the project data")
-    throws(ReadmeGeneratorError)
-  {
-    do {
-      self = try YAMLDecoder().decode(Catalog.self, from: yaml)
-    } catch let error as DecodingError {
-      throw .invalidData(path: path, reason: error.readableDescription)
-    } catch {
-      throw .invalidData(path: path, reason: "\(error)")
-    }
+  internal init(markdown: String) {
+    self.markdown = markdown.trimmingCharacters(in: .whitespacesAndNewlines)
   }
 
-  /// Reads and decodes the catalog at `url`.
+  /// Reads the template at `url`.
   internal init(contentsOf url: URL) throws(ReadmeGeneratorError) {
-    let yaml: String
+    let markdown: String
     do {
-      yaml = try String(contentsOf: url, encoding: .utf8)
+      markdown = try String(contentsOf: url, encoding: .utf8)
     } catch {
-      throw .unreadableData(path: url.path, reason: error.localizedDescription)
+      throw .unreadableTemplate(path: url.path, reason: error.localizedDescription)
     }
-    try self.init(yaml: yaml, path: url.path)
+    self.init(markdown: markdown)
   }
 }

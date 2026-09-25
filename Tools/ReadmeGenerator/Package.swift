@@ -12,20 +12,43 @@ let swiftSettings: [SwiftSetting] = [
 
 let package = Package(
   name: "ReadmeGenerator",
-  platforms: [.macOS(.v13)],
+  // ConfigKeyKit requires macOS 15.
+  platforms: [.macOS(.v15)],
   products: [
-    .executable(name: "generate-readme", targets: ["ReadmeGenerator"])
+    .executable(name: "generate-readme", targets: ["generate-readme"]),
+    .library(name: "ReadmeGenerator", targets: ["ReadmeGenerator"]),
   ],
   dependencies: [
     .package(url: "https://github.com/jpsim/Yams.git", from: "6.0.0"),
-    .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0"),
+    .package(
+      url: "https://github.com/apple/swift-configuration.git",
+      from: "1.2.0",
+      traits: [.defaults, "CommandLineArguments"]
+    ),
+    .package(url: "https://github.com/brightdigit/ConfigKeyKit.git", exact: "1.0.0-beta.3"),
+    .package(url: "https://github.com/swiftlang/swift-markdown.git", from: "0.9.0"),
+    .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.36.0"),
+    .package(url: "https://github.com/apple/swift-nio.git", from: "2.100.0"),
   ],
   targets: [
     .executableTarget(
+      name: "generate-readme",
+      dependencies: [
+        "ReadmeGenerator",
+        .product(name: "ConfigKeyKit", package: "ConfigKeyKit"),
+      ],
+      swiftSettings: swiftSettings
+    ),
+    .target(
       name: "ReadmeGenerator",
       dependencies: [
         .product(name: "Yams", package: "Yams"),
-        .product(name: "ArgumentParser", package: "swift-argument-parser"),
+        .product(name: "Configuration", package: "swift-configuration"),
+        .product(name: "ConfigKeyKit", package: "ConfigKeyKit"),
+        .product(name: "Markdown", package: "swift-markdown"),
+        .product(name: "AsyncHTTPClient", package: "async-http-client"),
+        .product(name: "NIOCore", package: "swift-nio"),
+        .product(name: "NIOFoundationCompat", package: "swift-nio"),
       ],
       swiftSettings: swiftSettings
     ),
@@ -33,7 +56,7 @@ let package = Package(
       name: "ReadmeGeneratorTests",
       dependencies: [
         "ReadmeGenerator",
-        .product(name: "Yams", package: "Yams"),
+        .product(name: "Configuration", package: "swift-configuration"),
       ],
       swiftSettings: swiftSettings
     ),

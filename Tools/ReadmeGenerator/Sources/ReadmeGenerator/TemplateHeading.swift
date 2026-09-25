@@ -1,5 +1,5 @@
 //
-//  AnchorGenerator.swift
+//  TemplateHeading.swift
 //  ReadmeGenerator
 //
 //  Created by Leo Dion.
@@ -27,18 +27,10 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-/// Produces heading anchors the way GitHub does when it renders Markdown.
-///
-/// Repeated headings get `-1`, `-2`, … suffixes in document order, which is why
-/// every heading on the page must be passed through the same generator.
-internal struct AnchorGenerator: Codable, Equatable, Sendable {
-  private var occurrences: [String: Int] = [:]
-
-  /// Returns the anchor for the next heading with this text.
-  internal mutating func anchor(for heading: String) -> String {
-    let slug = heading.gitHubSlug
-    let previousOccurrences = occurrences[slug, default: 0]
-    occurrences[slug] = previousOccurrences + 1
-    return previousOccurrences > 0 ? "\(slug)-\(previousOccurrences)" : slug
-  }
+/// A heading found in a Markdown template.
+internal struct TemplateHeading: Codable, Equatable, Sendable {
+  /// The heading level, such as `2` for `##`.
+  internal let level: Int
+  /// The heading's plain text, without Markdown formatting.
+  internal let text: String
 }
