@@ -1,21 +1,50 @@
+//
+//  GenerateReadme.swift
+//  ReadmeGenerator
+//
+//  Created by Leo Dion.
+//  Copyright © 2026 BrightDigit.
+//
+//  Permission is hereby granted, free of charge, to any person
+//  obtaining a copy of this software and associated documentation
+//  files (the "Software"), to deal in the Software without
+//  restriction, including without limitation the rights to use,
+//  copy, modify, merge, publish, distribute, sublicense, and/or
+//  sell copies of the Software, and to permit persons to whom the
+//  Software is furnished to do so, subject to the following
+//  conditions:
+//
+//  The above copyright notice and this permission notice shall be
+//  included in all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+//  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+//  OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+//  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+//  HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+//  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+//  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+//  OTHER DEALINGS IN THE SOFTWARE.
+//
+
 import ArgumentParser
 import Foundation
 
 @main
-struct GenerateReadme: AsyncParsableCommand {
-  static let configuration = CommandConfiguration(
+internal struct GenerateReadme: AsyncParsableCommand {
+  internal static let configuration = CommandConfiguration(
     commandName: "generate-readme",
     abstract: "Generate README.md from the project data and Markdown templates."
   )
 
   @Option(help: "The YAML file listing categories, projects, and resources.")
-  var data = "data/projects.yml"
+  internal var data = "data/projects.yml"
 
   @Option(help: "The directory containing header.md and footer.md.")
-  var templates = "Templates"
+  internal var templates = "Templates"
 
   @Option(help: "Where to write the generated Markdown.")
-  var output = "README.md"
+  internal var output = "README.md"
 
   @Flag(
     help: """
@@ -23,40 +52,26 @@ struct GenerateReadme: AsyncParsableCommand {
       Requires the GITHUB_TOKEN environment variable.
       """
   )
-  var fetchMetadata = false
+  internal var fetchMetadata = false
 
-  func run() async throws {
-    let catalog = try Catalog.load(from: URL(fileURLWithPath: data))
-    try CatalogValidator.validate(catalog)
-
-    let templatesURL = URL(fileURLWithPath: templates, isDirectory: true)
-    var renderer = ReadmeRenderer(
-      header: try template(named: "header.md", in: templatesURL),
-      footer: try template(named: "footer.md", in: templatesURL)
-    )
-    if fetchMetadata {
-      renderer.metadata = await fetchMetadata(for: catalog.projects)
-    }
-
-    let readme = renderer.render(catalog)
-    do {
-      try readme.write(to: URL(fileURLWithPath: output), atomically: true, encoding: .utf8)
-    } catch {
-      throw GeneratorError("Could not write \(output): \(error.localizedDescription)")
-    }
-    print("Wrote \(output) with \(catalog.projects.count) projects.")
+  private static func printError(_ message: String) {
+    FileHandle.standardError.write(Data((message + "\n").utf8))
   }
 
-  private func template(named name: String, in directory: URL) throws -> String {
+  private static func template(named name: String, in directory: URL) throws -> String {
     let url = directory.appendingPathComponent(name)
     do {
       return try String(contentsOf: url, encoding: .utf8)
     } catch {
-      throw GeneratorError("Could not read template \(url.path): \(error.localizedDescription)")
+      throw GeneratorError(
+        "Could not read template \(url.path): \(error.localizedDescription)"
+      )
     }
   }
 
-  private func fetchMetadata(for projects: [Project]) async -> [String: RepositoryMetadata] {
+  private static func fetchRepositoryMetadata(
+    for projects: [Project]
+  ) async -> [String: RepositoryMetadata] {
     let token = ProcessInfo.processInfo.environment["GITHUB_TOKEN"] ?? ""
     guard !token.isEmpty else {
       printError("GITHUB_TOKEN is not set; generating without GitHub metadata.")
@@ -65,11 +80,35 @@ struct GenerateReadme: AsyncParsableCommand {
     let urls = projects.map(\.url)
     let metadata = await GitHubMetadataFetcher(token: token).metadata(forURLs: urls)
     let repositoryCount = Set(urls.compactMap(GitHubRepository.init(url:))).count
-    printError("Fetched GitHub metadata for \(metadata.count) of \(repositoryCount) repositories.")
+    printError(
+      "Fetched GitHub metadata for \(metadata.count) of \(repositoryCount) repositories."
+    )
     return metadata
   }
 
-  private func printError(_ message: String) {
-    FileHandle.standardError.write(Data((message + "\n").utf8))
+  internal func run() async throws {
+    let catalog = try Catalog.load(from: URL(fileURLWithPath: data))
+    try CatalogValidator.validate(catalog)
+
+    let templatesURL = URL(fileURLWithPath: templates, isDirectory: true)
+    var renderer = ReadmeRenderer(
+      header: try Self.template(named: "header.md", in: templatesURL),
+      footer: try Self.template(named: "footer.md", in: templatesURL)
+    )
+    if fetchMetadata {
+      renderer.metadata = await Self.fetchRepositoryMetadata(for: catalog.projects)
+    }
+
+    let readme = renderer.render(catalog)
+    do {
+      try readme.write(
+        to: URL(fileURLWithPath: output),
+        atomically: true,
+        encoding: .utf8
+      )
+    } catch {
+      throw GeneratorError("Could not write \(output): \(error.localizedDescription)")
+    }
+    print("Wrote \(output) with \(catalog.projects.count) projects.")
   }
 }

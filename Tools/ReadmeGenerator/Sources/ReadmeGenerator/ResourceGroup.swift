@@ -1,5 +1,5 @@
 //
-//  AnchorGenerator.swift
+//  ResourceGroup.swift
 //  ReadmeGenerator
 //
 //  Created by Leo Dion.
@@ -27,32 +27,8 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-/// Produces heading anchors the way GitHub does when it renders Markdown.
-///
-/// GitHub lowercases the heading, drops punctuation and symbols, and turns
-/// spaces into hyphens, so "Media & Documents" becomes `media--documents`.
-/// Repeated headings get `-1`, `-2`, … suffixes in document order, which is why
-/// every heading on the page must be passed through the same generator.
-internal struct AnchorGenerator {
-  private var occurrences: [String: Int] = [:]
-
-  internal static func slug(for heading: String) -> String {
-    var slug = ""
-    for character in heading.lowercased() {
-      if character == " " {
-        slug.append("-")
-      } else if character.isLetter || character.isNumber || "-_".contains(character) {
-        slug.append(character)
-      }
-    }
-    return slug
-  }
-
-  /// Returns the anchor for the next heading with this text.
-  internal mutating func anchor(for heading: String) -> String {
-    let slug = Self.slug(for: heading)
-    let previousOccurrences = occurrences[slug, default: 0]
-    occurrences[slug] = previousOccurrences + 1
-    return previousOccurrences > 0 ? "\(slug)-\(previousOccurrences)" : slug
-  }
+/// A subsection of the README's learning resources, such as "Talks".
+internal struct ResourceGroup: Decodable, Sendable {
+  internal let name: String
+  internal let items: [Resource]
 }

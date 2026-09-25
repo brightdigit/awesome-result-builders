@@ -1,5 +1,5 @@
 //
-//  AnchorGenerator.swift
+//  URLSession+ResponseData.swift
 //  ReadmeGenerator
 //
 //  Created by Leo Dion.
@@ -27,32 +27,31 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-/// Produces heading anchors the way GitHub does when it renders Markdown.
-///
-/// GitHub lowercases the heading, drops punctuation and symbols, and turns
-/// spaces into hyphens, so "Media & Documents" becomes `media--documents`.
-/// Repeated headings get `-1`, `-2`, … suffixes in document order, which is why
-/// every heading on the page must be passed through the same generator.
-internal struct AnchorGenerator {
-  private var occurrences: [String: Int] = [:]
+import Foundation
 
-  internal static func slug(for heading: String) -> String {
-    var slug = ""
-    for character in heading.lowercased() {
-      if character == " " {
-        slug.append("-")
-      } else if character.isLetter || character.isNumber || "-_".contains(character) {
-        slug.append(character)
+#if canImport(FoundationNetworking)
+  import FoundationNetworking
+#endif
+
+extension URLSession {
+  /// Performs `request` and returns the body and HTTP status code.
+  ///
+  /// Wraps the completion-handler API in a continuation because the async
+  /// `URLSession` methods aren't available in every Linux Foundation release.
+  internal func responseData(
+    for request: URLRequest
+  ) async throws -> (data: Data, statusCode: Int) {
+    try await withCheckedThrowingContinuation { continuation in
+      let task = dataTask(with: request) { data, response, error in
+        if let error {
+          continuation.resume(throwing: error)
+        } else if let data, let response = response as? HTTPURLResponse {
+          continuation.resume(returning: (data, response.statusCode))
+        } else {
+          continuation.resume(throwing: URLError(.badServerResponse))
+        }
       }
+      task.resume()
     }
-    return slug
-  }
-
-  /// Returns the anchor for the next heading with this text.
-  internal mutating func anchor(for heading: String) -> String {
-    let slug = Self.slug(for: heading)
-    let previousOccurrences = occurrences[slug, default: 0]
-    occurrences[slug] = previousOccurrences + 1
-    return previousOccurrences > 0 ? "\(slug)-\(previousOccurrences)" : slug
   }
 }

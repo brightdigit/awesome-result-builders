@@ -1,5 +1,5 @@
 //
-//  AnchorGenerator.swift
+//  RepositoryMetadata.swift
 //  ReadmeGenerator
 //
 //  Created by Leo Dion.
@@ -27,32 +27,17 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-/// Produces heading anchors the way GitHub does when it renders Markdown.
-///
-/// GitHub lowercases the heading, drops punctuation and symbols, and turns
-/// spaces into hyphens, so "Media & Documents" becomes `media--documents`.
-/// Repeated headings get `-1`, `-2`, … suffixes in document order, which is why
-/// every heading on the page must be passed through the same generator.
-internal struct AnchorGenerator {
-  private var occurrences: [String: Int] = [:]
+import Foundation
 
-  internal static func slug(for heading: String) -> String {
-    var slug = ""
-    for character in heading.lowercased() {
-      if character == " " {
-        slug.append("-")
-      } else if character.isLetter || character.isNumber || "-_".contains(character) {
-        slug.append(character)
-      }
-    }
-    return slug
+/// Repository details shown next to a project when `--fetch-metadata` is used.
+internal struct RepositoryMetadata: Decodable, Sendable {
+  private enum CodingKeys: String, CodingKey {
+    case stars = "stargazers_count"
+    case pushedAt = "pushed_at"
+    case isArchived = "archived"
   }
 
-  /// Returns the anchor for the next heading with this text.
-  internal mutating func anchor(for heading: String) -> String {
-    let slug = Self.slug(for: heading)
-    let previousOccurrences = occurrences[slug, default: 0]
-    occurrences[slug] = previousOccurrences + 1
-    return previousOccurrences > 0 ? "\(slug)-\(previousOccurrences)" : slug
-  }
+  internal let stars: Int
+  internal let pushedAt: Date?
+  internal let isArchived: Bool
 }

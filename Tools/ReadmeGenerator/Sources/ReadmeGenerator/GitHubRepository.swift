@@ -1,5 +1,5 @@
 //
-//  AnchorGenerator.swift
+//  GitHubRepository.swift
 //  ReadmeGenerator
 //
 //  Created by Leo Dion.
@@ -27,32 +27,31 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-/// Produces heading anchors the way GitHub does when it renders Markdown.
-///
-/// GitHub lowercases the heading, drops punctuation and symbols, and turns
-/// spaces into hyphens, so "Media & Documents" becomes `media--documents`.
-/// Repeated headings get `-1`, `-2`, … suffixes in document order, which is why
-/// every heading on the page must be passed through the same generator.
-internal struct AnchorGenerator {
-  private var occurrences: [String: Int] = [:]
+import Foundation
 
-  internal static func slug(for heading: String) -> String {
-    var slug = ""
-    for character in heading.lowercased() {
-      if character == " " {
-        slug.append("-")
-      } else if character.isLetter || character.isNumber || "-_".contains(character) {
-        slug.append(character)
-      }
+/// The owner and name of a repository linked as `https://github.com/<owner>/<name>`.
+internal struct GitHubRepository: Hashable, Sendable {
+  internal let owner: String
+  internal let name: String
+
+  /// Returns `nil` unless `url` points at the root of a GitHub repository.
+  internal init?(url: String) {
+    guard
+      let components = URLComponents(string: url),
+      let host = components.host?.lowercased(),
+      ["github.com", "www.github.com"].contains(host)
+    else {
+      return nil
     }
-    return slug
-  }
-
-  /// Returns the anchor for the next heading with this text.
-  internal mutating func anchor(for heading: String) -> String {
-    let slug = Self.slug(for: heading)
-    let previousOccurrences = occurrences[slug, default: 0]
-    occurrences[slug] = previousOccurrences + 1
-    return previousOccurrences > 0 ? "\(slug)-\(previousOccurrences)" : slug
+    let parts = components.path.split(separator: "/")
+    guard parts.count == 2 else {
+      return nil
+    }
+    var name = String(parts[1])
+    if name.hasSuffix(".git") {
+      name.removeLast(4)
+    }
+    owner = String(parts[0])
+    self.name = name
   }
 }
