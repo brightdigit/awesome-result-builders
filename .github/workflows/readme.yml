@@ -8,6 +8,8 @@ on:
       - "data/**"
       - "Templates/**"
       - "Tools/**"
+      - ".github/actions/**"
+      - ".github/workflows/readme.yml"
   schedule:
     # Weekly, Mondays at 06:47 UTC, to refresh stars and last-updated dates.
     - cron: "47 6 * * 1"
@@ -22,10 +24,123 @@ concurrency:
   group: readme-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
-env:
-  PACKAGE_PATH: Tools/ReadmeGenerator
-
 jobs:
+  detect-changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # dorny/paths-filter lists a pull request's files through the API.
+      pull-requests: read
+    outputs:
+      # A skipped filter step has empty outputs, so this is false on the events
+      # where the filter cannot answer the question -- see below.
+      code-changed: ${{ steps.filter.outputs.code == 'true' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # Only push and pull_request carry a base to diff against. Scheduled and
+      # manual runs rebuild the same commit that was already built and linted,
+      # so skip the filter there and leave code-changed false.
+      - name: Detect code changes
+        uses: dorny/paths-filter@v4
+        id: filter
+        if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
+        with:
+          # Anything that affects the generator's code, its lint rules, or the
+          # CI logic itself. data/ and Templates/ are runtime input and are
+          # intentionally excluded.
+          filters: |
+            code:
+              - 'Tools/ReadmeGenerator/Sources/**'
+              - 'Tools/ReadmeGenerator/Tests/**'
+              - 'Tools/ReadmeGenerator/Package.swift'
+              - 'Tools/ReadmeGenerator/Package.resolved'
+              - 'Tools/ReadmeGenerator/.mise.toml'
+              - 'Tools/ReadmeGenerator/.swift-format'
+              - 'Tools/ReadmeGenerator/.swiftlint.yml'
+              - 'Tools/ReadmeGenerator/Scripts/**'
+              - '.github/actions/**'
+              - '.github/workflows/readme.yml'
+
+  build:
+    name: Build
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.code-changed == 'true' }}
+    runs-on: ubuntu-latest
+    container: swift:6.4
+    timeout-minutes: 20
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      # Builds and runs the unit tests; caches .build on its own.
+      - name: Build and Test
+        uses: brightdigit/swift-build@v1
+        with:
+          working-directory: Tools/ReadmeGenerator
+
+  lint:
+    name: Lint
+    needs: [detect-changes, build]
+    if: ${{ needs.detect-changes.outputs.code-changed == 'true' }}
+    runs-on: ubuntu-latest
+    container: swift:6.4
+    timeout-minutes: 30
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Capture Swift version
+        id: swift
+        run: echo "version=$(swift --version 2>/dev/null | head -n1 | tr -cd '[:alnum:].')" >> "$GITHUB_OUTPUT"
+
+      # swift-format is built from source by mise's spm backend, which takes
+      # several minutes, so the installed tools are cached per toolchain and
+      # .mise.toml. They are saved as soon as they're installed, so a run that
+      # fails lint still keeps them.
+      - name: Restore mise tools
+        id: mise-cache
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/.local/share/mise/installs
+          key: mise-${{ runner.os }}-${{ runner.arch }}-${{ steps.swift.outputs.version }}-${{ hashFiles('Tools/ReadmeGenerator/.mise.toml') }}
+
+      - uses: jdx/mise-action@v4
+        env:
+          # Raise the default 30s download timeout: GitHub throttles the SwiftLint
+          # release zip when fetched under load. Authenticate via the token to lift
+          # the unauthenticated rate limit.
+          MISE_HTTP_TIMEOUT: 300s
+          MISE_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          working_directory: Tools/ReadmeGenerator
+          install: ${{ steps.mise-cache.outputs.cache-hit != 'true' }}
+          cache: false
+
+      - name: Save mise tools
+        if: steps.mise-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ~/.local/share/mise/installs
+          key: ${{ steps.mise-cache.outputs.cache-primary-key }}
+
+      # lint.sh also runs `swift build --build-tests`.
+      - name: Cache SwiftPM build
+        uses: actions/cache@v6
+        with:
+          path: Tools/ReadmeGenerator/.build
+          key: spm-debug-${{ runner.os }}-${{ steps.swift.outputs.version }}-${{ hashFiles('Tools/ReadmeGenerator/Package.resolved') }}
+          restore-keys: spm-debug-${{ runner.os }}-${{ steps.swift.outputs.version }}-
+
+      - name: Lint
+        run: ./Tools/ReadmeGenerator/Scripts/lint.sh
+        env:
+          LINT_MODE: STRICT
+
   preview:
     name: Preview README
     if: github.event_name == 'pull_request'
@@ -35,19 +150,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/cache@v6
-        with:
-          path: Tools/ReadmeGenerator/.build
-          key: swift-6.4-${{ runner.os }}-${{ hashFiles('Tools/ReadmeGenerator/Package.swift', 'Tools/ReadmeGenerator/Package.resolved') }}
-          restore-keys: swift-6.4-${{ runner.os }}-
-
-      - name: Build generator
-        run: swift build --package-path "$PACKAGE_PATH"
+      - name: Restore or build generator
+        uses: ./.github/actions/generator-binary
 
       - name: Generate README
-        run: |
-          swift run --package-path "$PACKAGE_PATH" --skip-build generate-readme \
-            --output "$RUNNER_TEMP/README.md"
+        run: ./.bin/generate-readme --output "$RUNNER_TEMP/README.md"
 
       - name: Write preview to the step summary
         run: cat "$RUNNER_TEMP/README.md" >> "$GITHUB_STEP_SUMMARY"
@@ -63,19 +170,13 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/cache@v6
-        with:
-          path: Tools/ReadmeGenerator/.build
-          key: swift-6.4-${{ runner.os }}-${{ hashFiles('Tools/ReadmeGenerator/Package.swift', 'Tools/ReadmeGenerator/Package.resolved') }}
-          restore-keys: swift-6.4-${{ runner.os }}-
-
-      - name: Build generator
-        run: swift build --package-path "$PACKAGE_PATH"
+      - name: Restore or build generator
+        uses: ./.github/actions/generator-binary
 
       - name: Generate README with GitHub metadata
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: swift run --package-path "$PACKAGE_PATH" --skip-build generate-readme --fetch-metadata
+        run: ./.bin/generate-readme --fetch-metadata
 
       - name: Commit README if it changed
         run: |

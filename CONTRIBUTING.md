@@ -67,3 +67,14 @@ GITHUB_TOKEN=$(gh auth token) swift run --package-path Tools/ReadmeGenerator gen
 Repositories that can't be looked up, such as private ones, are listed without metadata.
 
 If the generator reports a problem such as an unknown category or a duplicate URL, fix it in `data/projects.yml` and run it again.
+
+## Changing the generator
+
+Changes to the generator's Swift code are built, tested, and linted in CI. Linting uses swift-format and SwiftLint, the same setup used across BrightDigit's Swift packages, with the tool versions pinned in [`Tools/ReadmeGenerator/.mise.toml`](Tools/ReadmeGenerator/.mise.toml). With [mise](https://mise.jdx.dev) installed, run these before opening a pull request:
+
+```sh
+swift test --package-path Tools/ReadmeGenerator
+Tools/ReadmeGenerator/Scripts/lint.sh
+```
+
+Run locally, the script also formats the code, applies SwiftLint's fixes and adds the standard file headers. Set `LINT_MODE=STRICT` to match CI.
