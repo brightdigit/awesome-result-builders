@@ -8,7 +8,7 @@ body:
       value: |
         Thanks for the suggestion! Please check the [inclusion criteria](https://github.com/leogdion/awesome-result-builders/blob/main/CONTRIBUTING.md#inclusion-criteria) first.
 
-        When you submit this issue, a pull request adding the project to `data/projects.yml` is opened automatically for a maintainer to review. If something needs fixing, a comment here will say what; edit the issue and the pull request is updated.
+        When you submit this issue, a pull request adding the project to `data/projects.yml` and the regenerated `README.md` is opened automatically for a maintainer to review. If something needs fixing, a comment here will say what; edit the issue and the pull request is updated.
 
   - type: input
     id: name

@@ -1,5 +1,6 @@
 // Turns an "Add a project" issue (.github/ISSUE_TEMPLATE/add-project.yml) into
-// a pull request that adds the project to data/projects.yml.
+// a pull request that adds the project to data/projects.yml and includes the
+// regenerated README.md.
 //
 // Used by .github/workflows/project-request.yml through actions/github-script.
 // The issue body is untrusted input: it is only ever parsed as data, every
@@ -10,6 +11,7 @@ const fs = require('fs')
 const path = require('path')
 
 const DATA_PATH = 'data/projects.yml'
+const README_PATH = 'README.md'
 const COMMENT_MARKER = '<!-- project-request -->'
 const LABELS = {
   name: 'Project name',
@@ -180,6 +182,46 @@ async function upsertComment({ github, context }, body) {
   }
 }
 
+// Commits the updated project data and README on top of the checked-out commit
+// as a single commit, and points the branch at it.
+async function commitFiles({ github, context }, branch, message) {
+  const { owner, repo } = context.repo
+  const { data: baseCommit } = await github.rest.git.getCommit({
+    owner,
+    repo,
+    commit_sha: context.sha,
+  })
+  const { data: tree } = await github.rest.git.createTree({
+    owner,
+    repo,
+    base_tree: baseCommit.tree.sha,
+    tree: [DATA_PATH, README_PATH].map((file) => ({
+      path: file,
+      mode: '100644',
+      type: 'blob',
+      content: fs.readFileSync(file, 'utf8'),
+    })),
+  })
+  const { data: commit } = await github.rest.git.createCommit({
+    owner,
+    repo,
+    message,
+    tree: tree.sha,
+    parents: [context.sha],
+  })
+
+  // Force the branch to the new commit, so an edited issue replaces the
+  // previous attempt instead of stacking another entry on it.
+  try {
+    await github.rest.git.updateRef({ owner, repo, ref: `heads/${branch}`, sha: commit.sha, force: true })
+  } catch (error) {
+    if (error.status !== 404 && error.status !== 422) {
+      throw error
+    }
+    await github.rest.git.createRef({ owner, repo, ref: `refs/heads/${branch}`, sha: commit.sha })
+  }
+}
+
 // Step 3: commit the change to project-request/issue-N and open (or update) its PR.
 async function openPullRequest({ github, context }) {
   const { owner, repo } = context.repo
@@ -189,27 +231,7 @@ async function openPullRequest({ github, context }) {
   const name = process.env.PROJECT_NAME
   const entry = process.env.PROJECT_ENTRY
 
-  // Start the branch from the commit this run checked out, so an edited issue
-  // replaces the previous attempt instead of stacking another entry on it.
-  try {
-    await github.rest.git.updateRef({ owner, repo, ref: `heads/${branch}`, sha: context.sha, force: true })
-  } catch (error) {
-    if (error.status !== 404 && error.status !== 422) {
-      throw error
-    }
-    await github.rest.git.createRef({ owner, repo, ref: `refs/heads/${branch}`, sha: context.sha })
-  }
-
-  const { data: file } = await github.rest.repos.getContent({ owner, repo, path: DATA_PATH, ref: branch })
-  await github.rest.repos.createOrUpdateFileContents({
-    owner,
-    repo,
-    path: DATA_PATH,
-    branch,
-    sha: file.sha,
-    message: `Add ${name}\n\nRequested in #${issue.number}.`,
-    content: Buffer.from(fs.readFileSync(DATA_PATH, 'utf8')).toString('base64'),
-  })
+  await commitFiles({ github, context }, branch, `Add ${name}\n\nRequested in #${issue.number}.`)
 
   const title = `Add ${name}`
   const fence = entry.includes('```') ? '````' : '```'
@@ -220,7 +242,7 @@ async function openPullRequest({ github, context }) {
     entry,
     fence,
     '',
-    'The entry was validated with `generate-readme`. `README.md` is regenerated automatically after this is merged.',
+    'The entry was validated with `generate-readme`, and `README.md` was regenerated (with GitHub metadata) so the diff shows the result.',
     '',
     `Closes #${issue.number}`,
   ].join('\n')
