@@ -39,33 +39,33 @@ This list collects projects where a result builder is a primary part of the API,
 
 Build source code, such as Swift syntax trees, from declarative descriptions.
 
-- [SyntaxKit](https://github.com/brightdigit/SyntaxKit) - Generate Swift code programmatically with declarative syntax.
+- [SyntaxKit](https://github.com/brightdigit/SyntaxKit) - Generate Swift code programmatically with declarative syntax. ★ 106 · updated Jun 2026
 
 ## Package Management
 
 Describe Swift packages and their manifests declaratively.
 
-- [PackageDSL](https://github.com/brightdigit/PackageDSL) - Type-safe, modular DSL for managing your Package.swift file.
+- [PackageDSL](https://github.com/brightdigit/PackageDSL) - Type-safe, modular DSL for managing your Package.swift file. ★ 106 · updated Aug 2025
 
 ## Media & Documents
 
 Create and work with presentations, video projects, and other documents.
 
-- [DeckUI](https://github.com/joshdholtz/DeckUI) - Write presentations in Swift with a SwiftUI-powered result builder DSL.
-- [FCPKit](https://github.com/brightdigit/FCPKit) - Swift package for working with Final Cut Pro FCPXML documents.
-- [KeynoteKit](https://github.com/brightdigit/KeynoteKit) - Swift package for working with Apple Keynote documents.
+- [DeckUI](https://github.com/joshdholtz/DeckUI) - Write presentations in Swift with a SwiftUI-powered result builder DSL. ★ 622 · updated Sep 2025
+- [FCPKit](https://github.com/brightdigit/FCPKit) - Swift package for working with Final Cut Pro FCPXML documents. ★ 1 · updated Aug 2026
+- [KeynoteKit](https://github.com/brightdigit/KeynoteKit) - Swift package for working with Apple Keynote documents. ★ 1 · updated Aug 2026
 
 ## Music & Audio
 
 Compose music and sound with Swift.
 
-- [MusicPlaygournd](https://github.com/1amageek/MusicPlaygournd) - Native macOS live music editor powered by the SwiftMusic DSL.
+- [MusicPlaygournd](https://github.com/1amageek/MusicPlaygournd) - Native macOS live music editor powered by the SwiftMusic DSL. ★ 35 · updated Sep 2026
 
 ## 3D & CAD
 
 Model 3D geometry and parts for printing and fabrication.
 
-- [Cadova](https://github.com/tomasf/Cadova) - Swift DSL for parametric 3D modeling.
+- [Cadova](https://github.com/tomasf/Cadova) - Swift DSL for parametric 3D modeling. ★ 421 · updated Sep 2026
 
 ## Learning Resources
 
