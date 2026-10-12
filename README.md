@@ -59,13 +59,13 @@ Create and work with presentations, video projects, and other documents.
 
 Compose music and sound with Swift.
 
-- [MusicPlaygournd](https://github.com/1amageek/MusicPlaygournd) - Native macOS live music editor powered by the SwiftMusic DSL. ★ 95 · updated Sep 2026
+- [MusicPlaygournd](https://github.com/1amageek/MusicPlaygournd) - Native macOS live music editor powered by the SwiftMusic DSL. ★ 117 · updated Oct 2026
 
 ## 3D & CAD
 
 Model 3D geometry and parts for printing and fabrication.
 
-- [Cadova](https://github.com/tomasf/Cadova) - Swift DSL for parametric 3D modeling. ★ 423 · updated Oct 2026
+- [Cadova](https://github.com/tomasf/Cadova) - Swift DSL for parametric 3D modeling. ★ 427 · updated Oct 2026
 
 ## Learning Resources
 
