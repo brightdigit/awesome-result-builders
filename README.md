@@ -39,7 +39,7 @@ This list collects projects where a result builder is a primary part of the API,
 
 Build source code, such as Swift syntax trees, from declarative descriptions.
 
-- [SyntaxKit](https://github.com/brightdigit/SyntaxKit) - Generate Swift code programmatically with declarative syntax. ★ 106 · updated Jun 2026
+- [SyntaxKit](https://github.com/brightdigit/SyntaxKit) - Generate Swift code programmatically with declarative syntax. ★ 106 · updated Oct 2026
 
 ## Package Management
 
@@ -59,13 +59,13 @@ Create and work with presentations, video projects, and other documents.
 
 Compose music and sound with Swift.
 
-- [MusicPlaygournd](https://github.com/1amageek/MusicPlaygournd) - Native macOS live music editor powered by the SwiftMusic DSL. ★ 118 · updated Oct 2026
+- [MusicPlaygournd](https://github.com/1amageek/MusicPlaygournd) - Native macOS live music editor powered by the SwiftMusic DSL. ★ 119 · updated Oct 2026
 
 ## 3D & CAD
 
 Model 3D geometry and parts for printing and fabrication.
 
-- [Cadova](https://github.com/tomasf/Cadova) - Swift DSL for parametric 3D modeling. ★ 436 · updated Oct 2026
+- [Cadova](https://github.com/tomasf/Cadova) - Swift DSL for parametric 3D modeling. ★ 437 · updated Oct 2026
 
 ## Learning Resources
 
