@@ -45,7 +45,7 @@ Build source code, such as Swift syntax trees, from declarative descriptions.
 
 Describe Swift packages and their manifests declaratively.
 
-- [PackageDSL](https://github.com/brightdigit/PackageDSL) - Type-safe, modular DSL for managing your Package.swift file. ★ 106 · updated Aug 2025
+- [PackageDSL](https://github.com/brightdigit/PackageDSL) - Type-safe, modular DSL for managing your Package.swift file. ★ 105 · updated Aug 2025
 
 ## Media & Documents
 
@@ -59,7 +59,7 @@ Create and work with presentations, video projects, and other documents.
 
 Compose music and sound with Swift.
 
-- [MusicPlaygournd](https://github.com/1amageek/MusicPlaygournd) - Native macOS live music editor powered by the SwiftMusic DSL. ★ 119 · updated Oct 2026
+- [MusicPlaygournd](https://github.com/1amageek/MusicPlaygournd) - Native macOS live music editor powered by the SwiftMusic DSL. ★ 121 · updated Oct 2026
 
 ## 3D & CAD
 
