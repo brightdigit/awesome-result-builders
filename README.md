@@ -51,7 +51,7 @@ Describe Swift packages and their manifests declaratively.
 
 Create and work with presentations, video projects, and other documents.
 
-- [DeckUI](https://github.com/joshdholtz/DeckUI) - Write presentations in Swift with a SwiftUI-powered result builder DSL. ★ 622 · updated Sep 2025
+- [DeckUI](https://github.com/joshdholtz/DeckUI) - Write presentations in Swift with a SwiftUI-powered result builder DSL. ★ 621 · updated Sep 2025
 - [FCPKit](https://github.com/brightdigit/FCPKit) - Swift package for working with Final Cut Pro FCPXML documents. ★ 1 · updated Aug 2026
 - [KeynoteKit](https://github.com/brightdigit/KeynoteKit) - Swift package for working with Apple Keynote documents. ★ 1 · updated Aug 2026
 
@@ -65,7 +65,7 @@ Compose music and sound with Swift.
 
 Model 3D geometry and parts for printing and fabrication.
 
-- [Cadova](https://github.com/tomasf/Cadova) - Swift DSL for parametric 3D modeling. ★ 437 · updated Oct 2026
+- [Cadova](https://github.com/tomasf/Cadova) - Swift DSL for parametric 3D modeling. ★ 442 · updated Nov 2026
 
 ## Learning Resources
 
